@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using Domain.Contracts;
 using Domain.Entities.Products;
+using Service.Specifications;
 using ServiceAbstraction.Contracts;
+using Shared;
 using Shared.DTOs;
 
 namespace Service.Implementations
@@ -15,9 +17,10 @@ namespace Service.Implementations
             return brandsResult;
         }
 
-        public async Task<IEnumerable<ProductResultDTO>> GetAllProductsAsync()
+        public async Task<IEnumerable<ProductResultDTO>> GetAllProductsAsync(ProductSpecificationParameters parameters)
         {
-            var products = await unitOfWork.GetRepository<Product, int>().GetAllAsync();
+            var specifications = new ProductWithBrandAndTypeSpecifications(parameters);
+            var products = await unitOfWork.GetRepository<Product, int>().GetAllAsync(specifications);
             var productsResult = mapper.Map<IEnumerable<ProductResultDTO>>(products);
             return productsResult;
         }
@@ -31,7 +34,8 @@ namespace Service.Implementations
 
         public async Task<ProductResultDTO> GetProductByIdAsync(int id)
         {
-            var product = await unitOfWork.GetRepository<Product, int>().GetByIdAsync(id);
+            var specifications = new ProductWithBrandAndTypeSpecifications(id);
+            var product = await unitOfWork.GetRepository<Product, int>().GetByIdAsync(specifications);
             var productResult = mapper.Map<ProductResultDTO>(product);
             return productResult;
         }
