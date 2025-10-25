@@ -1,16 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using ServiceAbstraction.Contracts;
 using Shared;
-using Shared.DTOs;
+using Shared.DTOs.ProductModule;
+using Shared.ErrorModels;
 
 namespace Presentation.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class ProductsController(IServiceManager serviceManager) : ControllerBase
+    public class ProductsController(IServiceManager serviceManager) : ApiController
     {
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProductResultDTO>>> GetAllProductsAsync([FromQuery] ProductSpecificationParameters parameters)
+        public async Task<ActionResult<PaginatedResult<ProductResultDTO>>> GetAllProductsAsync([FromQuery] ProductSpecificationParameters parameters)
             => Ok(await serviceManager.ProductService.GetAllProductsAsync(parameters));
 
         [HttpGet("Brands")]
@@ -21,6 +21,7 @@ namespace Presentation.Controllers
         public async Task<ActionResult<IEnumerable<TypeResultDTO>>> GetAllTypesAsync()
             => Ok(await serviceManager.ProductService.GetAllTypesAsync());
 
+        [ProducesResponseType(typeof(ProductResultDTO), StatusCodes.Status200OK)]
         [HttpGet("{id:int}")]
         public async Task<ActionResult<ProductResultDTO>> GetProductByIdAsync(int id)
             => Ok(await serviceManager.ProductService.GetProductByIdAsync(id));

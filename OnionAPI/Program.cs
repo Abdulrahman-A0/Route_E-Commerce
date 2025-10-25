@@ -1,12 +1,4 @@
-using Domain.Contracts;
-using Domain.Entities.Products;
-using Microsoft.EntityFrameworkCore;
-using Presistence.Data;
-using Presistence.Data.Contexts;
-using Presistence.Repositories;
-using Service;
-using Service.Implementations;
-using ServiceAbstraction.Contracts;
+using OnionAPI.Extensions;
 
 namespace OnionAPI
 {
@@ -14,41 +6,29 @@ namespace OnionAPI
     {
         public static async Task Main(string[] args)
         {
+            #region DI Container
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            //WebApi Services
+            builder.Services.AddWebApiServices();
 
-            builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            //Infrastructure Services
+            builder.Services.AddInfrastructureServices(builder.Configuration);
 
-            builder.Services.AddDbContext<AppDbContext>(options =>
-            {
-                options.UseSqlServer(builder.Configuration.GetConnectionString("cs"));
-            });
+            //Core Services
+            builder.Services.AddCoreServices();
+            #endregion
 
-            builder.Services.AddScoped<IDataSeeder, DataSeeder>();
-            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-            builder.Services.AddAutoMapper(cfg => { }, typeof(AssemblyReference).Assembly);
-            builder.Services.AddScoped<IServiceManager, ServiceManager>();
-
+            #region Pipelines - Middlewares
             var app = builder.Build();
 
-            using (var scope = app.Services.CreateScope())
-            {
-                var seeder = scope.ServiceProvider.GetRequiredService<IDataSeeder>();
+            await app.SeedDatabaseAsync();
 
-                await seeder.SeedDataAsync<ProductBrand>("..\\Infrastructure\\Presistence\\Data\\DataSeed\\brands.json");
-                await seeder.SeedDataAsync<ProductType>("..\\Infrastructure\\Presistence\\Data\\DataSeed\\types.json");
-                await seeder.SeedDataAsync<Product>("..\\Infrastructure\\Presistence\\Data\\DataSeed\\products.json");
-            }
-
+            app.UseExceptionHandlingMiddlewares();
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
-                app.UseSwagger();
-                app.UseSwaggerUI();
+                app.UseSwaggerMiddlewares();
             }
 
             app.UseHttpsRedirection();
@@ -61,6 +41,7 @@ namespace OnionAPI
             app.MapControllers();
 
             app.Run();
+            #endregion
         }
     }
 }

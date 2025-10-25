@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Domain.Entities.Products;
 using Microsoft.Extensions.Configuration;
-using Shared.DTOs;
+using Shared.DTOs.ProductModule;
 
 namespace Service.MappingProfiles
 {
