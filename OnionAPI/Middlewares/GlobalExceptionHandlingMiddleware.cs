@@ -42,21 +42,29 @@ namespace OnionAPI.Middlewares
 
         private async Task HandleExceptionAsync(HttpContext context, Exception ex)
         {
-            context.Response.StatusCode = ex switch
-            {
-                NotFoundException => StatusCodes.Status404NotFound,
-                _ => StatusCodes.Status500InternalServerError
-            };
-
             context.Response.ContentType = "application/json";
 
             var response = new ErrorDetails()
             {
-                StatusCode = context.Response.StatusCode,
                 Message = ex.Message,
-            }.ToString();
+            };
 
-            await context.Response.WriteAsync(response);
+            context.Response.StatusCode = ex switch
+            {
+                NotFoundException => StatusCodes.Status404NotFound,
+                UnAuthorizedException => StatusCodes.Status401Unauthorized,
+                ValidationException validationException => HandelValidationException(validationException, response),
+                _ => StatusCodes.Status500InternalServerError
+            };
+
+            response.StatusCode = context.Response.StatusCode;
+            await context.Response.WriteAsync(response.ToString());
+        }
+
+        private int HandelValidationException(ValidationException validationException, ErrorDetails response)
+        {
+            response.Errors = validationException.Errors;
+            return StatusCodes.Status400BadRequest;
         }
     }
 }

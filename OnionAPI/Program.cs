@@ -16,7 +16,7 @@ namespace OnionAPI
             builder.Services.AddInfrastructureServices(builder.Configuration);
 
             //Core Services
-            builder.Services.AddCoreServices();
+            builder.Services.AddCoreServices(builder.Configuration);
             #endregion
 
             #region Pipelines - Middlewares
@@ -34,6 +34,8 @@ namespace OnionAPI
             app.UseHttpsRedirection();
 
             app.UseStaticFiles();
+
+            app.UseAuthentication();
 
             app.UseAuthorization();
 

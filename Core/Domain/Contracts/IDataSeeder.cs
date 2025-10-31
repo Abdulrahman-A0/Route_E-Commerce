@@ -9,5 +9,6 @@ namespace Domain.Contracts
     public interface IDataSeeder
     {
         Task SeedDataAsync<T>(string seedingFilePath) where T : class;
+        Task SeedIdentityDataAsync();
     }
 }
