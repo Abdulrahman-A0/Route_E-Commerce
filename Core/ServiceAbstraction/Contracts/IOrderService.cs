@@ -8,5 +8,6 @@ namespace ServiceAbstraction.Contracts
         Task<IEnumerable<OrderResult>> GetOrdersByEmailAsync(string userEmail);
         Task<OrderResult> CreateOrderAsync(OrderRequest orderRequest, string userEmail);
         Task<IEnumerable<DeliveryMethodResult>> GetDeliveryMethodsAsync();
+        Task<IEnumerable<OrderResult>> GetAllOrdersAsync(string email);
     }
 }

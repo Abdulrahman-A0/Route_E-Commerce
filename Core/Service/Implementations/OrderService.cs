@@ -4,6 +4,8 @@ using Domain.Entities.Basket;
 using Domain.Entities.Order;
 using Domain.Entities.Products;
 using Domain.Exceptions;
+using Microsoft.AspNetCore.Mvc;
+using Service.Specifications;
 using ServiceAbstraction.Contracts;
 using Shared.DTOs.OrderModule;
 
@@ -14,23 +16,31 @@ namespace Service.Implementations
     {
         public async Task<OrderResult> CreateOrderAsync(OrderRequest orderRequest, string userEmail)
         {
-            var address = _mapper.Map<Address>(orderRequest.ShippingAddress);
+            var address = _mapper.Map<Address>(orderRequest.ShipToAddress);
             var basket = await _basketRepository.GetBasketAsync(orderRequest.BasketId)
                 ?? throw new BasketNotFoundException(orderRequest.BasketId);
             var orderItems = new List<OrderItem>();
-            foreach (var item in basket.BasketItems)
+            foreach (var item in basket.Items)
             {
                 var product = await _unitOfWork.GetRepository<Product, int>()
                     .GetByIdAsync(item.Id) ?? throw new ProductNotFoundException(item.Id);
                 orderItems.Add(CreateOrderItem(product, item));
             }
+            var orderRepo = _unitOfWork.GetRepository<Order, Guid>();
+
             var deliveryMethod = await _unitOfWork.GetRepository<DeliveryMethod, int>()
                 .GetByIdAsync(orderRequest.DeliveryMethodId)
                 ?? throw new DeliveryNotFoundException(orderRequest.DeliveryMethodId);
+            var orderExist = await orderRepo.GetByIdAsync(new OrderWithPaymentIntentIdSpecifications(basket.PaymentIntentId));
+            if (orderExist != null)
+            {
+                orderRepo.Delete(orderExist);
+
+            }
             var subTotal = orderItems.Sum(o => o.Price * o.Quantity);
 
-            var orderToCreate = new Order(userEmail, address, orderItems, deliveryMethod, subTotal);
-            await _unitOfWork.GetRepository<Order, Guid>().AddAsync(orderToCreate);
+            var orderToCreate = new Order(userEmail, address, orderItems, deliveryMethod, subTotal, basket.PaymentIntentId);
+            await orderRepo.AddAsync(orderToCreate);
             await _unitOfWork.SaveChangesAsync();
 
             return _mapper.Map<OrderResult>(orderToCreate);
@@ -42,19 +52,29 @@ namespace Service.Implementations
             return new OrderItem(productInOrderItem, product.Price, item.Quantity);
         }
 
-        public Task<IEnumerable<DeliveryMethodResult>> GetDeliveryMethodsAsync()
+        public async Task<IEnumerable<DeliveryMethodResult>> GetDeliveryMethodsAsync()
         {
-            throw new NotImplementedException();
+            var deliveryMethods = await _unitOfWork.GetRepository<DeliveryMethod, int>().GetAllAsync();
+            return _mapper.Map<IEnumerable<DeliveryMethodResult>>(deliveryMethods);
         }
 
-        public Task<OrderResult> GetOrderByIdAsync(Guid id)
+        public async Task<OrderResult> GetOrderByIdAsync(Guid id)
         {
-            throw new NotImplementedException();
+            var specs = new OrderSpecification(id);
+            var order = await _unitOfWork.GetRepository<Order, Guid>().GetByIdAsync(id);
+            return _mapper.Map<OrderResult>(order);
         }
 
         public Task<IEnumerable<OrderResult>> GetOrdersByEmailAsync(string userEmail)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<IEnumerable<OrderResult>> GetAllOrdersAsync(string email)
+        {
+            var specs = new OrderSpecification(email);
+            var orders = await _unitOfWork.GetRepository<Order, Guid>().GetAllAsync(specs);
+            return _mapper.Map<IEnumerable<OrderResult>>(orders);
         }
     }
 }

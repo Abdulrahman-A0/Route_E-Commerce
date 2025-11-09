@@ -6,7 +6,9 @@ namespace Domain.Entities.Order
         public Order()
         {
         }
-        public Order(string userEmail, ShippingAddress shippingAddress, ICollection<OrderItem> orderItems, DeliveryMethod deliveryMethod, decimal subTotal)
+        public Order(string userEmail, ShippingAddress shippingAddress,
+            ICollection<OrderItem> orderItems, DeliveryMethod deliveryMethod,
+            decimal subTotal, string paymentIntentId)
         {
             Id = Guid.NewGuid();
             UserEmail = userEmail;
@@ -14,6 +16,7 @@ namespace Domain.Entities.Order
             OrderItems = orderItems;
             DeliveryMethod = deliveryMethod;
             SubTotal = subTotal;
+            PaymentIntentId = paymentIntentId;
         }
 
         public string UserEmail { get; set; } = string.Empty;

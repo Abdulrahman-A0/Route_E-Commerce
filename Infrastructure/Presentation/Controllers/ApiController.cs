@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Shared.ErrorModels;
+using System.Security.Claims;
 
 namespace Presentation.Controllers
 {
@@ -11,5 +12,6 @@ namespace Presentation.Controllers
     [ProducesResponseType(typeof(ValidationErrorResponse), StatusCodes.Status400BadRequest)]
     public class ApiController : ControllerBase
     {
+        protected string GetUserEmail() => User.FindFirstValue(ClaimTypes.Email);
     }
 }

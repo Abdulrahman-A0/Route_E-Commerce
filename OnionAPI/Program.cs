@@ -10,7 +10,7 @@ namespace OnionAPI
             var builder = WebApplication.CreateBuilder(args);
 
             //WebApi Services
-            builder.Services.AddWebApiServices();
+            builder.Services.AddWebApiServices(builder.Configuration);
 
             //Infrastructure Services
             builder.Services.AddInfrastructureServices(builder.Configuration);
@@ -34,6 +34,8 @@ namespace OnionAPI
             app.UseHttpsRedirection();
 
             app.UseStaticFiles();
+
+            app.UseCors("MyPolicy");
 
             app.UseAuthentication();
 

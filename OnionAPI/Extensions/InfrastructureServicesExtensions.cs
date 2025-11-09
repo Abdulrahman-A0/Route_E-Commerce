@@ -41,7 +41,10 @@ namespace OnionAPI.Extensions
                 options.User.RequireUniqueEmail = true;
             })
                 .AddEntityFrameworkStores<IdentityAppDbContext>();
+
             services.AddScoped<IBasketRepository, BasketRepository>();
+            services.AddScoped<ICacheRepository, CacheRepository>();
+
 
             services.ValidateJwt(configuration);
             return services;
